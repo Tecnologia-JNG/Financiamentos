@@ -40,7 +40,7 @@
     // Consulta TOP 20
     $sql = "SELECT id, cpf_cnpj, nome, celular, email, rg, dt_nascimento, nacionalidade, genero, estado_civil, valor_patrimonio, nome_mae, cep, endereco, numero, bairro, cidade, estado, tipo_imovel,
         natureza_ocupacao, profissao, tempo_empresa_anos, tempo_empresa_meses, renda_mensal, integrador, agente, gerente, valor_projeto, parcela, carencia, data_input,
-        banco_bv, banco_santander, simulacao_bv, simulacao_sant, data_inicial, data_final
+        banco_bv, banco_santander, simulacao_bv, simulacao_sant, data_inicial, data_final, status
         FROM clientes 
         $whereClause
         ORDER BY id DESC";
@@ -59,7 +59,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh">
+    <meta http-equiv="refresh" content="180">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://www.jng.com.br/Assinaturas/logo_JNG_azul.png" sizes="32x32">
     <title>Acompanhamento das Simulações</title>
@@ -268,7 +268,6 @@
             background: white;
             padding: 30px;
             border-radius: 10px;
-            max-width: 900px;
             box-shadow: 0 0 10px #00000030;
             display: flex;
             flex-wrap: wrap;
@@ -408,137 +407,178 @@
                         </tr>
                     </table>
                     <div class="full">
-                        
                     </div>
             </form>
                 <table>
                     <tr>
                         <th>CPF/CNPJ</th>
                         <th>Data de Cadastro</th>
+                        <th>Proposta</th>
                         <th>Simulação</th>
-                        <th>Parcelas</th>
                         <th>Banco BV</th>
                         <th>Banco Santander</th>
                     </tr>
-
+                    <!-- while para criar tabela com as informações do banco de dados -->
                     <?php while ($row = mysqli_fetch_assoc($result)):
 
-                        $id = $row['id'];
-                        $cpf               = $row['cpf_cnpj'];
-                        $dt_nascimento     = $row['dt_nascimento'];
-                        $parcela           = $row['parcela'];
-                        $banco_bv          = trim($row['banco_bv'] ?? '');
-                        $banco_santander   = trim($row['banco_santander'] ?? '');
-                        $simulacao_bv      = trim($row['simulacao_bv'] ?? '');
-                        $simulacao_sant    = trim($row['simulacao_sant'] ?? '');
-                        $data_inicial      = trim($row['data_inicial'] ?? '');
-                        $data_final        = trim($row['data_final'] ?? '');
+                    $id = $row['id'];
+                    $cpf               = $row['cpf_cnpj'];
+                    $dt_nascimento     = $row['dt_nascimento'];
+                    $parcela           = $row['parcela'];
+                    $banco_bv          = trim($row['banco_bv'] ?? '');
+                    $banco_santander   = trim($row['banco_santander'] ?? '');
+                    $simulacao_bv      = trim($row['simulacao_bv'] ?? '');
+                    $simulacao_sant    = trim($row['simulacao_sant'] ?? '');
+                    $data_inicial      = trim($row['data_inicial'] ?? '');
+                    $data_final        = trim($row['data_final'] ?? '');
+                    $statusValue       = strtolower(trim($row['status'] ?? ''));
 
-                        $dataInput = '';
-                        if (!empty($row['data_input'])) {
-                            $dataInput = date('d/m/Y H:i', strtotime($row['data_input']));
-                        }
+                    $dataInput = '';
+                    if (!empty($row['data_input'])) {
+                        $dataInput = date('d/m/Y H:i', strtotime($row['data_input']));
+                    }
+                    
 
-                        // Se NÃO tem banco_bv E NÃO tem banco_santander
-                        if (empty($banco_bv) && empty($banco_santander)) {
-                            echo "<tr>
-                                    <td>" . formatCpfCnpj($cpf) . "</td>
-                                    <td>$dataInput</td>
-                                    <td>-</td>
-                                    <td>
-                                        <button class='btn-simulacao'
-                                            data-Simulacao--Banco='" . htmlspecialchars($simulacao_bv, ENT_QUOTES) . "'  
-                                            data-Simulacao--Santander='" . htmlspecialchars($simulacao_sant, ENT_QUOTES) . "' 
-                                        >Ver</button>
-                                    </td>
-                                    <td colspan='2' class='aguardando'>⏳ Aguardando Processamento</td>
-                                </tr>";
-                            continue; // Pula para o próximo registro
-                        }
+                    // Se NÃO tem banco_bv E NÃO tem banco_santander
+                    if (empty($banco_bv) && empty($banco_santander)) {
+                        echo "<tr>
+                        <td>" . formatCpfCnpj($cpf) . "</td>
+                        <td>$dataInput</td>
+                        <td></td>
+                        <td></td>
+                        <td colspan='2' class='aguardando'>⏳ Aguardando Processamento</td>
+                        </tr>";
+                        continue;
+                    }
 
-                        // Se tem banco_bv ou banco_santander
-                        $bvIcon = isTrueValue($banco_bv) ? '✅' : '❌';
-                        $santanderIcon = isTrueValue($banco_santander) ? '✅' : '❌';
-                        ?>
+                    // Banco BV
+                    if (in_array(strtolower($banco_bv), ['s', 'sim'])) {
+                        $bvIcon = '✅ Processado';
+                    } elseif (in_array(strtolower($banco_bv), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
+                        $bvIcon = '❌ ERR CPF/CNPJ';
+                        
+                    } else {
+                        $bvIcon = '⏳ Aguardando';
+                    }
 
+                    // Banco Santander
+                    if (in_array(strtolower($banco_santander), ['s', 'sim'])) {
+                        $santanderIcon = '✅ Processado';
+                    } elseif (in_array(strtolower($banco_santander), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
+                        $santanderIcon = '❌ ERR CPF/CNPJ';
+                    } else {
+                        $santanderIcon = '⏳ Aguardando';
+                    }
+
+                    // Simulação Banco BV
+                    if (!empty($simulacao_bv)) {
+                        $simulacaoBvLabel = htmlspecialchars($simulacao_bv);
+                    } elseif (in_array(strtolower($banco_bv), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
+                        $simulacaoBvLabel = '❌ ERR CPF/CNPJ';
+                    } elseif (in_array(strtolower($banco_bv), ['s', 'sim'])) {
+                        $simulacaoBvLabel = '⚠️ Sem resultado';
+                    } else {
+                        $simulacaoBvLabel = '⏳ Aguardando';
+                    }
+
+                    // Simulação Santander
+                    if (!empty($simulacao_sant)) {
+                        $simulacaoSantLabel = htmlspecialchars($simulacao_sant);
+                    } elseif (in_array(strtolower($banco_santander), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
+                        $simulacaoSantLabel = '❌ ERR CPF/CNPJ';
+                    } elseif (in_array(strtolower($banco_santander), ['s', 'sim'])) {
+                        $simulacaoSantLabel = '⚠️ Sem resultado';
+                    } elseif (is_null($banco_santander)) {
+                        $simulacaoSantLabel = '⏳ Não processado';
+                    } else {
+                        $simulacaoSantLabel = '⏳ Aguardando';
+                    }
+
+                    ?>
                         <tr>
                         <td><?= formatCpfCnpj($cpf) ?></td>
                         <td><?= $dataInput ?></td>
                         <td>
-                            <a href="dadospessoais.php?id=<?= htmlspecialchars($id, ENT_QUOTES) ?>" style="text-decoration: none; color: white;" class="button">Continuar Simulação</a>
+                            <a href="dadospessoais.php?id=<?= htmlspecialchars($id, ENT_QUOTES) ?>" style="text-decoration: none; color: white;" class="button">Continuar Proposta</a>
                         </td>
                         <td>
-                            <button class="btn-simulacao"
-                                data-Simulacao--Banco="<?= htmlspecialchars($simulacao_bv) ?>"
-                                data-Simulacao--Santander="<?= htmlspecialchars($simulacao_sant) ?>"
-                            >Ver</button>
+                        <button class="btn-simulacao"
+                            data-Simulacao-Bv="<?= $simulacaoBvLabel ?>"
+                            data-Simulacao-Santander="<?= $simulacaoSantLabel ?>"
+                        >Ver</button>
                         </td>
                         <td><?= $bvIcon ?></td>
                         <td><?= $santanderIcon ?></td>
                         </tr>
-
                     <?php endwhile; ?>
-
                 </table>
             </div>
-            <div id="modalSimulacao" class="modal">
-                    <div class="modal-content">
-                        <span class="close close-simulacao">&times;</span>
-                            <h3>Parcelas<h3>
-                            <div id="contentSimulacao"></div>
-                    </div>
+                <div id="modalSimulacao" class="modal" style="display:none;">
+                <div class="modal-content">
+                <span class="close close-simulacao" style="float:right;cursor:pointer;">&times;</span>
+                <h3>Simulação</h3>
+                <div id="contentSimulacao" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;"></div>
             </div>
+</div>
+
     </div>
     </div>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll(".btn-simulacao").forEach(btn => {
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const labels = {
+            simulacaobv: "Simulação BV",
+            simulacaosantander: "Simulação Santander"
+        };
+
+
+        document.querySelectorAll(".btn-simulacao").forEach(btn => {
             btn.addEventListener("click", function () {
-                document.querySelectorAll(".btn-simulacao").forEach(b => b.removeAttribute("data-last-clicked"));
-                this.setAttribute("data-last-clicked", "true");
-
                 const fields = this.dataset;
-                let html = "<table>";
-                
-                // Cabeçalho da tabela
-                html += "<tr>";
-                for (const key in fields) {
-                    if (key.startsWith("simulacao")) {
-                        const label = key.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
-                        html += `<th>${label}</th>`;  // Adiciona os cabeçalhos
-                    }
-                }
-                html += "</tr>";
+                let html = "<table border='1'><tr>";
 
-                // Dados da tabela
-                html += "<tr>";
+                // Cabeçalhos
                 for (const key in fields) {
-                    if (key.startsWith("simulacao")) {
-                        html += `<td>${fields[key]}</td>`;  // Adiciona os dados
-                    }
+                    const label = labels[key.toLowerCase()] || key.replace(/-/g, ' ');
+                    html += `<th>${label}</th>`;
                 }
-                html += "</tr>";
 
-                html += "</table>";
+                html += "</tr><tr>";
+
+                // Conteúdo
+                for (const key in fields) {
+                    html += `<td>${fields[key]}</td>`;
+                }
+
+                html += "</tr></table>";
+
                 document.getElementById("contentSimulacao").innerHTML = html;
                 document.getElementById("modalSimulacao").style.display = "block";
             });
         });
-            const closeSimulacao = document.querySelector(".close-simulacao");
-            closeSimulacao.onclick = () => document.getElementById("modalSimulacao").style.display = "none";
-        });
-    </script>
-    <footer>
-        <div class="container-footer">
 
-            <p class="credits-left">
-                © 2024 <a href="/home.html" class="footer-link">Intranet | JNG</a>
-            </p>
-            
-            <p class="credits-right">
-                <span>Desenvolvido por Tecnologia <a href="http://jng.com.br" class="footer-link">JNG</a></span>
-            </p>
-        </div> 
-    </footer>
+        document.querySelector(".close-simulacao").onclick = () => {
+            document.getElementById("modalSimulacao").style.display = "none";
+        };
+    });
+</script>
+
+<footer>
+    <div class="container-footer">
+
+        <p class="credits-left">
+            © <span id="currentYear"></span> <a href="/home.html" class="footer-link">Intranet | JNG</a>
+        </p>
+        
+        <p class="credits-right">
+            <span>Desenvolvido por Tecnologia <a href="http://jng.com.br" class="footer-link">JNG</a></span>
+        </p>
+    </div> 
+</footer>
+
+<script>
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+</script>
+
 </body>
 </html>

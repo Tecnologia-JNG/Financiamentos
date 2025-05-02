@@ -608,7 +608,7 @@
             </div>
             <div class="client-info-pair">
                 <label for="numero">Número:</label>
-                <input type="text" id="numero" name="numero" value="<?= htmlspecialchars($cliente['numero']) ?>" required>
+                <input type="text" id="numero" name="numero" value="<?= htmlspecialchars($cliente['numero']) ?>">
             </div>
             <div class="client-info-pair">
                 <label for="bairro">Bairro:</label>
@@ -702,6 +702,7 @@
                     <option value="ARTHUR MOREIRA" <?= $cliente['gerente'] == 'ARTHUR MOREIRA' ? 'selected' : '' ?>>ARTHUR MOREIRA</option>
                 </select>
             </div>
+            
 
             <div class="client-info-pair" id="valor-projeto-wrapper">
                 <label for="valor_projeto">Valor do Projeto:</label>
@@ -721,16 +722,20 @@
     </div>
     <footer>
         <div class="container-footer">
+
             <p class="credits-left">
-                © 2024 <a href="/home.html" class="link">Intranet | JNG</a>
-            </p>         
+                © <span id="currentYear"></span> <a href="/home.html" class="link">Intranet | JNG</a>
+            </p>
+            
             <p class="credits-right">
                 <span>Desenvolvido por Tecnologia <a href="http://jng.com.br" class="link">JNG</a></span>
             </p>
         </div> 
     </footer>
-</body>
-</html>
+
+<script>
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+</script>
 
 <script>
 // Função simples de máscara
@@ -783,28 +788,34 @@ function mascaraCpfCnpj(input) {
         }
     });
 }
-
-// Aplicar máscaras nos campos específicos
-window.addEventListener('DOMContentLoaded', function() {
-    const cpfInput = document.getElementById('cpf');
-    const rgInput = document.getElementById('rg');
-    const celularInput = document.getElementById('celular');
-    const patrimonioInput = document.getElementById('valor_patrimonio');
-    const projetoInput = document.getElementById('valor_projeto');
-
-    if (cpfInput) mascaraCpfCnpj(cpfInput);
-    if (rgInput) aplicarMascara(rgInput, 'rg');
-    if (celularInput) aplicarMascara(celularInput, 'celular');
-    if (patrimonioInput) aplicarMascara(patrimonioInput, 'moeda');
-    if (projetoInput) aplicarMascara(projetoInput, 'moeda');
-});
 </script>
 
+<!-- Inclua estas duas bibliotecas no <head> ou antes do script abaixo -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://igorescobar.github.io/jQuery-Mask-Plugin/js/jquery.mask.min.js"></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://igorescobar.github.io/jQuery-Mask-Plugin/js/jquery.mask.min.js"></script>
+
 <script>
+    function formatCPFouCNPJ(valor) {
+        const apenasNumeros = valor.replace(/\D/g, '');
+        if (apenasNumeros.length > 11) {
+            return apenasNumeros.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+        } else {
+            return apenasNumeros.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+        }
+    }
+
+    function formatValorBrasileiro(valor) {
+    const numero = parseFloat(valor.toString().replace(/\./g, '').replace(',', '.'));
+    return isNaN(numero) ? '' : numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+
     function toggleEditMode() {
         const isEditing = document.getElementById("cpf").style.display === "block";
 
-        // Alterna entre mostrar texto ou campos de input
         document.getElementById("cpf-cnpj-text").style.display = isEditing ? "block" : "none";
         document.getElementById("cpf").style.display = isEditing ? "none" : "block";
 
@@ -815,9 +826,87 @@ window.addEventListener('DOMContentLoaded', function() {
         document.getElementById("estado").style.display = isEditing ? "none" : "block";
 
         document.getElementById("valor-projeto-text").style.display = isEditing ? "block" : "none";
-        document.getElementById("valor_projeto").style.display = isEditing ? "none" : "block";
+        document.getElementById("valor_projeto").style.display = isEditing ? "none" : "inline-block";
+
+        if (!isEditing) {
+            // Máscaras nos inputs
+            $('#cpf').unmask().mask('000.000.000-00', {
+                onKeyPress: function (cpf, e, field, options) {
+                    const isCNPJ = cpf.replace(/\D/g, '').length > 11;
+                    $(field).unmask();
+                    if (isCNPJ) {
+                        $(field).mask('00.000.000/0000-00');
+                    } else {
+                        $(field).mask('000.000.000-00');
+                    }
+                }
+            });
+
+            $('#data_nascimento').mask('00/00/0000');
+            $('#valor_projeto').mask('#.##0,00', { reverse: true });
+
+            // Aplica formatação visual nos <span>
+            const cpfValor = document.getElementById("cpf").value;
+            document.getElementById("cpf-cnpj-text").innerText = formatCPFouCNPJ(cpfValor);
+
+            const valorProjeto = document.getElementById("valor_projeto").value;
+            document.getElementById("valor-projeto-text").innerText = formatValorBrasileiro(valorProjeto);
+        }
     }
+
+    // Aplica formatação inicial nas <span> ao carregar a página
+    window.onload = function () {
+        const cpfValor = document.getElementById("cpf").value;
+        document.getElementById("cpf-cnpj-text").innerText = formatCPFouCNPJ(cpfValor);
+
+        const valorProjeto = document.getElementById("valor_projeto").value;
+        document.getElementById("valor-projeto-text").innerText = formatValorBrasileiro(valorProjeto);
+    };
 </script>
+
+
+
+<script>
+    function formatarMoeda(elemento) {
+        let valor = elemento.value.replace(/\D/g, '');
+        valor = (valor / 100).toFixed(2) + '';
+        valor = valor.replace(".", ",");
+        valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+        elemento.value = valor;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const campos = ['valor_projeto', 'valor_patrimonio'];
+
+        campos.forEach(function (id) {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', function () {
+                    formatarMoeda(input);
+                });
+
+                // Formatar valor inicial
+                if (input.value) {
+                    formatarMoeda(input);
+                }
+            }
+        });
+    });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+$(document).ready(function(){
+    $('#cpf').mask('000.000.000-00', {reverse: true});
+    $('#celular').mask('(00) 00000-0000');
+    $('#cep').mask('00000-000');
+    $('#rg').mask('00.000.000-0');
+    $('#valor_patrimonio, #valor_projeto').mask('#.##0,00', {reverse: true});
+});
+</script>
+
+</body>
+</html>
 
 <?php
 // Fecha a conexão com o banco de dados

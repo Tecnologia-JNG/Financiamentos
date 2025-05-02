@@ -449,17 +449,21 @@
     </div>
 
     <footer>
-        <div class="container-footer">
+    <div class="container-footer">
 
-            <p class="credits-left">
-                © 2024 <a href="/home.html" class="footer-link">Intranet | JNG</a>
-            </p>
-            
-            <p class="credits-right">
-                <span>Desenvolvido por Tecnologia <a href="http://jng.com.br" class="footer-link">JNG</a></span>
-            </p>
-        </div> 
-    </footer>
+        <p class="credits-left">
+            © <span id="currentYear"></span> <a href="/home.html" class="footer-link">Intranet | JNG</a>
+        </p>
+        
+        <p class="credits-right">
+            <span>Desenvolvido por Tecnologia <a href="http://jng.com.br" class="footer-link">JNG</a></span>
+        </p>
+    </div> 
+</footer>
+
+<script>
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+</script>
 
     <script>
         $(document).ready(function () {
