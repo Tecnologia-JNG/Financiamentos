@@ -99,8 +99,7 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 ## 📣 Contato
 
 - **Autor:** Tecnologia JNG  
-- **E-mail:** tecnologia.jng@example.com  
-- **LinkedIn:** https://www.linkedin.com/in/tecnologia-jng
+- **E-mail:** ti@jng.com  
 
 ---
 
