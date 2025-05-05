@@ -27,7 +27,6 @@ Financiamentos/
 │ └── fonts/ # Fontes utilizadas (ex: AptosDisplay)
 └── README.md # Este arquivo
 
-
 ## 🛠️ Tecnologias Utilizadas
 
 - PHP puro
@@ -40,10 +39,11 @@ Financiamentos/
 1. Clone este repositório:
    ```bash
    git clone https://github.com/Tecnologia-JNG/Financiamentos.git
-
-2. Copie a pasta para o diretório do seu servidor local (por exemplo: htdocs no XAMPP)
+2. Copie a pasta para o diretório do seu servidor local (por exemplo: htdocs no XAMPP).
 
 3. Acesse no navegador:
+   ```bash
 http://localhost/Financiamentos/forms.php
 
 🧪 Para Desenvolvedores
+Em breve, mais detalhes sobre contribuições e desenvolvimento local.
