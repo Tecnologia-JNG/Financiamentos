@@ -6,6 +6,8 @@
 
 Sistema simples para gerenciamento de reservas de veículos, desenvolvido em PHP com MySQL. Permite cadastrar, listar e reservar veículos de forma prática e eficiente, ideal para pequenas empresas ou uso interno.
 
+---
+
 ## 💰 Financiamentos
 
 Gerencie e acompanhe financiamentos de forma simples e eficiente. Este projeto oferece uma interface intuitiva para o cadastro de dados pessoais, preenchimento de formulários financeiros e visualização de informações relevantes.
