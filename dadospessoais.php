@@ -2,15 +2,6 @@
  //Colocar montar servidor e sql///
 ?>
 
-<?php if (isset($_GET['sucesso']) && $_GET['sucesso'] == 1): ?>
-    <script>
-        alert('✅ Dados inseridos com sucesso!');
-        setTimeout(function() {
-            window.location.href = window.location.pathname + '?id=<?= $id ?>';
-        }, 1000);
-    </script>
-<?php endif; ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
