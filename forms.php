@@ -1,7 +1,7 @@
 <?php
-$servername = 'GRPJNG011204080'; // ou IP do servidor MySQL
+$servername = '127.0.0.1:3312'; // ou IP do servidor MySQL
 $username = 'root';
-$password = 'password';
+$password = '';
 $database = 'FINANCEIRAS';
 
 
@@ -36,6 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     date_default_timezone_set('America/Sao_Paulo');
     $data_input = date('Y-m-d H:i:s');
     $celular = limparDocumento($_POST['celular'] ?? '');
+    $cnpj_integrador = limparDocumento($_POST['cnpj_integrador'] ?? '');
+    $operador = $_POST['operador'];
 
     if (!empty($dt_nascfund)) {
         // Formatar para o formato Y-m-d para o MySQL
@@ -53,20 +55,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     $sql = "INSERT INTO clientes (
-            cpf_cnpj, dt_nascfund, estado, valor_projeto, data_input, celular
-        ) VALUES (?, ?, ?, ?, ?, ?)";
+            cpf_cnpj, dt_nascfund, estado, valor_projeto, data_input, celular, operador, cnpj_integrador, renda_mensal
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = mysqli_prepare($conn, $sql);
 
     mysqli_stmt_bind_param(
         $stmt,
-        "ssssss",
+        "sssssssss",
         $cpf_cnpj,       // s: string
         $dt_nascimento_limpa,  // s: string
         $estado,         // s: string
         $valor_projeto,  // s: string
         $data_input,     // s: string
-        $celular
+        $celular,
+        $operador,
+        $cnpj_integrador,
+        $renda_mensal
     );
 
     if (mysqli_stmt_execute($stmt)) {
@@ -315,6 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #00aae3;
         }
 
+
         .dark-mode-btn {
             background: #00aae3;
             color: white;
@@ -440,14 +446,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: none;
             border: none;
             font-size: 28px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .dark-mode-btn {
-            background: none;
-            border: none;
-            font-size: 22px;
             color: white;
             cursor: pointer;
         }
@@ -622,7 +620,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo "<input type='text' name='cpf_cnpj' id='cpf_cnpj' value='$valorCpfCnpj' required>";
                         echo "</div>";
 
-                        // Campos restantes
                         $camposSelect = [
                             "estado" => [
                                 "AC",
@@ -652,16 +649,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 "SP",
                                 "SE",
                                 "TO"
+                            ],
+                            "operador" => [
+                                "Pedro Oliveira",
+                                "Pamela Ribeiro"
                             ]
                         ];
 
-                        $fields = ["dt_nascfund", "estado", "valor_projeto", "celular"];
+                        $fields = ["dt_nascfund", "cnpj_integrador", "estado", "valor_projeto", "renda_mensal", "celular", "operador"];
 
                         $labels = [
-                            "dt_nascfund" => "Data de Nascimento:",
+                            "dt_nascfund" => "Data de Nascimento/Fundação:",
                             "estado" => "Estado:",
                             "valor_projeto" => "Valor Projeto:",
-                            "celular" => "Celular:"
+                            "celular" => "Celular:",
+                            "renda_mensal" => "Renda Mensal:",
+                            "operador" => "Operador:",
+                            "cnpj_integrador" => "Cnpj Integrador:"
                         ];
 
                         foreach ($fields as $field) {
@@ -673,10 +677,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 echo "<select name='$field' id='$field' $isRequired>";
                                 echo "<option value=''>Selecione</option>";
 
-                                foreach ($camposSelect[$field] as $option) {
-                                    $selected = (isset($valoresPadrao[$field]) && $option === $valoresPadrao[$field]) ? 'selected' : '';
-                                    echo "<option value='$option' $selected>$option</option>";
+                                foreach ($camposSelect[$field] as $index => $option) {
+                                    // Se for operador, usamos o índice + 1 como value
+                                    $value = ($field === 'operador') ? $index + 1 : $option;
+
+                                    $selected = (isset($valoresPadrao[$field]) && $valoresPadrao[$field] == $value) ? 'selected' : '';
+                                    echo "<option value='$value' $selected>$option</option>";
                                 }
+
                                 echo "</select>";
                             } else {
                                 $inputType = ($field === 'dt_nascfund') ? 'date' : 'text';
@@ -730,6 +738,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $('#celular').mask('(00) 00000-0000');
 
             $('#valor_projeto').mask('000.000.000,00', {
+                reverse: true
+            });
+
+            $('#renda_mensal').mask('000.000.000,00', {
+                reverse: true
+            });
+
+            $('#cnpj_integrador').mask('00.000.000/0000-00', {
                 reverse: true
             });
         });
@@ -846,12 +862,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
 
     <script>
-        function toggleDarkMode() {
-            document.body.classList.toggle("dark-mode");
-        }
-    </script>
-
-    <script>
         function toggleMenu() {
             const nav = document.getElementById('navLinks');
             nav.classList.toggle('show');
@@ -862,9 +872,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
 
+            // Salva o estado atual no localStorage
+            const isDark = document.body.classList.contains("dark-mode");
+            localStorage.setItem("theme", isDark ? "dark" : "light");
+        }
 
+        // Aplica o tema salvo ao carregar a página
+        window.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-mode");
+            }
+        });
 
+        // Evento no botão (caso ainda não tenha)
+        document.getElementById("toggle-theme").addEventListener("click", toggleDarkMode);
+    </script>
 </body>
 
 </html>
