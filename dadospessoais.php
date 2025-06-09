@@ -1,11 +1,8 @@
 <?php
+include("config.php");
+
 date_default_timezone_set('America/Sao_Paulo');
 header('Content-Type: text/html; charset=UTF-8');
-
-$servername = '127.0.0.1:3312'; // ou IP do servidor MySQL
-$username = 'root';
-$password = '';
-$database = 'FINANCEIRAS';
 
 // Conexão com MySQL
 $conn = mysqli_connect($servername, $username, $password, $database);
