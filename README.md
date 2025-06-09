@@ -60,20 +60,6 @@ Financiamentos/
    git clone https://github.com/Tecnologia-JNG/Financiamentos.git
    ```
 2. Importe o script `schema.sql` no seu MySQL para criar a tabela `clientes`.
-3. Ajuste credenciais de banco em `index.php`:
-   ```php
-   $db_host = 'localhost';
-   $db_user = 'seu_usuario';
-   $db_pass = 'sua_senha';
-   $db_name = 'financiamentos';
-   ```
-4. Copie a pasta para o diretório do servidor (ex: `htdocs` no XAMPP).
-5. Acesse no navegador:
-   ```
-   http://localhost/Financiamentos/index.php
-   ```
-
----
 
 ## 🤝 Contribuindo
 
