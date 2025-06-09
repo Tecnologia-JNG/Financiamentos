@@ -47,7 +47,7 @@ function formatCpfCnpj($value)
 // Consulta TOP 20
 $sql = "SELECT id, cpf_cnpj, nome, celular, email, rg, dt_nascimento, nacionalidade, genero, estado_civil, valor_patrimonio, nome_mae, cep, endereco, numero, bairro, cidade, estado, tipo_imovel,
     natureza_ocupacao, profissao, tempo_prof_anos, tempo_prof_meses, renda_mensal, integrador, agente, gerente, valor_projeto, parcela, carencia, data_input,
-    banco_bv, banco_santander, simulacao_bv, simulacao_sant, banco_solagora, simulacao_solagora status
+    banco_bv, banco_santander, simulacao_bv, simulacao_sant, banco_solagora, simulacao_solagora, status
     FROM clientes 
     $whereClause
     ORDER BY id DESC 
@@ -723,13 +723,15 @@ if (!$result) {
                             $id = $row['id'];
                             $cpf               = $row['cpf_cnpj'];
                             $parcela           = $row['parcela'];
-                            $banco_bv          = trim($row['banco_bv'] ?? '');
+                            $banco_bv          = ($row['banco_bv'] ?? '');
                             $banco_santander   = trim($row['banco_santander'] ?? '');
                             $simulacao_bv      = trim($row['simulacao_bv'] ?? '');
                             $simulacao_sant    = trim($row['simulacao_sant'] ?? '');
                             $statusValue       = strtolower(trim($row['status'] ?? ''));
-                            $banco_solagora = trim($rom['banco_solagora'] ?? '');
-                            $simulacao_solagora = trim($rom['simulacao_solagora'] ?? '');
+                            $banco_solagora = trim($row['banco_solagora'] ?? '');
+                            $simulacao_solagora = trim($row['simulacao_solagora'] ?? '');
+
+
 
                             $dataInput = '';
                             if (!empty($row['data_input'])) {
@@ -737,85 +739,116 @@ if (!$result) {
                             }
 
 
-                            // Se NÃO tem banco_bv E NÃO tem banco_santander
-                            if (empty($banco_bv) && empty($banco_santander)) {
+                            if (empty($banco_bv) && empty($banco_santander) && empty($banco_solagora)) {
                                 echo "<tr>
-                        <td>" . formatCpfCnpj($cpf) . "</td>
-                        <td>$dataInput</td>
-                        <td></td>
-                        <td></td>
-                        <td colspan='3' class='aguardando' style='text-align: center;'>⏳ Aguardando Processamento</td>
-                        </tr>";
+                                        <td>" . formatCpfCnpj($cpf) . "</td>
+                                        <td>$dataInput</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td colspan='3' class='aguardando' style='text-align: center;'>⏳ Aguardando Processamento</td>
+                                    </tr>";
                                 continue;
                             }
 
-                            // banco_bv
-                            if (strtoupper($banco_bv) === 'S' &&  $statusValue === 'processado') {
-                                $bvIcon = '✅ Processado';
-                            } elseif (strtoupper($banco_bv) === 'S' &&  $statusValue === 'integrado') {
-                                $bvIcon = '💰 Integrado';
-                            } elseif (strtoupper($banco_bv) === 'N' &&  $statusValue === 'err cpf/cnpj') {
-                                $bvIcon = '❌ ERR CPF/CNPJ';
-                            } else {
-                                $bvIcon = '⏳ Aguardando';
+                            // Banco BV
+                            switch (true) {
+                                case (strtoupper($banco_bv) === 'S' && $statusValue === 'processado'):
+                                    $bvIcon = '✅ Processado';
+                                    break;
+                                case (strtoupper($banco_bv) === 'S' && $statusValue === 'integrado'):
+                                    $bvIcon = '💰 Integrado';
+                                    break;
+                                case (strtoupper($banco_bv) === 'N' && $statusValue === 'err cpf/cnpj'):
+                                    $bvIcon = '❌ ERR CPF/CNPJ';
+                                    break;
+                                default:
+                                    $bvIcon = '⏳ Aguardando';
+                                    break;
                             }
 
-                            //  banco Santander
-                            if (strtoupper($banco_santander) === 'S' &&  $statusValue === 'processado') {
-                                $santanderIcon = '✅ Processado';
-                            } elseif (strtoupper($banco_santander) === 'S' &&  $statusValue === 'integrado') {
-                                $santanderIcon = '💰 Integrado';
-                            } elseif (strtoupper($banco_santander) === 'N' &&  $statusValue === 'err cpf/cnpj') {
-                                $santanderIcon = '❌ ERR CPF/CNPJ';
-                            } else {
-                                $santanderIcon = '⏳ Aguardando';
+                            // Banco Santander
+                            switch (true) {
+                                case (strtoupper($banco_santander) === 'S' && $statusValue === 'processado'):
+                                    $santanderIcon = '✅ Processado';
+                                    break;
+                                case (strtoupper($banco_santander) === 'S' && $statusValue === 'integrado'):
+                                    $santanderIcon = '💰 Integrado';
+                                    break;
+                                case (strtoupper($banco_santander) === 'N' && $statusValue === 'err cpf/cnpj'):
+                                    $santanderIcon = '❌ ERR CPF/CNPJ';
+                                    break;
+                                default:
+                                    $santanderIcon = '⏳ Aguardando';
+                                    break;
                             }
 
-                            //  banco Solagora
-                            if (strtoupper($banco_solagora) === 'S' &&  $statusValue === 'processado') {
-                                $solagoraIcon = '✅ Processado';
-                            } elseif (strtoupper($banco_solagora) === 'S' &&  $statusValue === 'integrado') {
-                                $solagoraIcon = '💰 Integrado';
-                            } elseif (strtoupper($banco_solagora) === 'N' &&  $statusValue === 'err cpf/cnpj') {
-                                $solagoraIcon = '❌ ERR CPF/CNPJ';
-                            } else {
-                                $solagoraIcon = '⏳ Aguardando';
+                            // Banco Solagora
+                            switch (true) {
+                                case (strtoupper($banco_solagora) === 'S' && $statusValue === 'processado'):
+                                    $solagoraIcon = '✅ Processado';
+                                    break;
+                                case (strtoupper($banco_solagora) === 'S' && $statusValue === 'integrado'):
+                                    $solagoraIcon = '💰 Integrado';
+                                    break;
+                                case (strtoupper($banco_solagora) === 'N' && $statusValue === 'err cpf/cnpj'):
+                                    $solagoraIcon = '❌ ERR CPF/CNPJ';
+                                    break;
+                                default:
+                                    $solagoraIcon = '⏳ Aguardando';
+                                    break;
                             }
 
                             // Simulação Banco BV
-                            if (!empty($simulacao_bv)) {
-                                $simulacaoBvLabel = htmlspecialchars($simulacao_bv);
-                            } elseif (in_array(strtolower($banco_bv), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
-                                $simulacaoBvLabel = '❌ ERR CPF/CNPJ';
-                            } elseif (in_array(strtolower($banco_bv), ['s', 'sim'])) {
-                                $simulacaoBvLabel = '⚠️ Sem resultado';
-                            } else {
-                                $simulacaoBvLabel = '⏳ Aguardando';
+                            switch (true) {
+                                case (!empty($simulacao_bv)):
+                                    $simulacaoBvLabel = htmlspecialchars($simulacao_bv);
+                                    break;
+                                case (in_array(strtolower($banco_bv), ['n', 'nao']) && $statusValue === 'err cpf/cnpj'):
+                                    $simulacaoBvLabel = '❌ ERR CPF/CNPJ';
+                                    break;
+                                case (in_array(strtolower($banco_bv), ['s', 'sim'])):
+                                    $simulacaoBvLabel = '⚠️ Sem resultado';
+                                    break;
+                                default:
+                                    $simulacaoBvLabel = '⏳ Aguardando';
+                                    break;
                             }
 
                             // Simulação Santander
-                            if (!empty($simulacao_sant)) {
-                                $simulacaoSantLabel = htmlspecialchars($simulacao_sant);
-                            } elseif (in_array(strtolower($banco_santander), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
-                                $simulacaoSantLabel = '❌ ERR CPF/CNPJ';
-                            } elseif (in_array(strtolower($banco_santander), ['s', 'sim'])) {
-                                $simulacaoSantLabel = '⚠️ Sem resultado';
-                            } elseif (is_null($banco_santander)) {
-                                $simulacaoSantLabel = '⏳ Não processado';
-                            } else {
-                                $simulacaoSantLabel = '⏳ Aguardando';
+                            switch (true) {
+                                case (!empty($simulacao_sant)):
+                                    $simulacaoSantLabel = htmlspecialchars($simulacao_sant);
+                                    break;
+                                case (in_array(strtolower($banco_santander), ['n', 'nao']) && $statusValue === 'err cpf/cnpj'):
+                                    $simulacaoSantLabel = '❌ ERR CPF/CNPJ';
+                                    break;
+                                case (in_array(strtolower($banco_santander), ['s', 'sim'])):
+                                    $simulacaoSantLabel = '⚠️ Sem resultado';
+                                    break;
+                                case (is_null($banco_santander)):
+                                    $simulacaoSantLabel = '⏳ Não processado';
+                                    break;
+                                default:
+                                    $simulacaoSantLabel = '⏳ Aguardando';
+                                    break;
                             }
 
-                            // Simulação Banco BV
-                            if (!empty($simulacao_solagora)) {
-                                $simulacaoSolagoraLabel = htmlspecialchars($simulacao_solagora);
-                            } elseif (in_array(strtolower($banco_solagora), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
-                                $simulacaoSolagoraLabel = '❌ ERR CPF/CNPJ';
-                            } elseif (in_array(strtolower($banco_solagora), ['s', 'sim'])) {
-                                $simulacaoSolagoraLabel = '⚠️ Sem resultado';
-                            } else {
-                                $simulacaoSolagoraLabel = '⏳ Aguardando';
+                            // Simulação Solagora
+                            switch (true) {
+                                case (!empty($simulacao_solagora)):
+                                    $simulacaoSolagoraLabel = htmlspecialchars($simulacao_solagora);
+                                    break;
+                                case (in_array(strtolower($banco_solagora), ['n', 'nao']) && $statusValue === 'err cpf/cnpj'):
+                                    $simulacaoSolagoraLabel = '❌ ERR CPF/CNPJ';
+                                    break;
+                                case (in_array(strtolower($banco_solagora), ['s', 'sim'])):
+                                    $simulacaoSolagoraLabel = '⚠️ Sem resultado';
+                                    break;
+                                default:
+                                    $simulacaoSolagoraLabel = '⏳ Aguardando';
+                                    break;
                             }
+
 
                         ?>
                             <tr>
