@@ -2,9 +2,9 @@
 date_default_timezone_set('America/Sao_Paulo');
 header('Content-Type: text/html; charset=UTF-8');
 
-$servername = 'GRPJNG011204080'; // ou IP do servidor MySQL
+$servername = '127.0.0.1:3312'; // ou IP do servidor MySQL
 $username = 'root';
-$password = 'password';
+$password = '';
 $database = 'FINANCEIRAS';
 
 // Conexão com MySQL
@@ -60,6 +60,12 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     date_default_timezone_set('America/Sao_Paulo');
     $cpf_cnpj = limparDocumento($_POST['cpf_cnpj'] ?? '');
+
+    // Se vier vazio, mantém o valor original do banco
+    if (empty($cpf_cnpj)) {
+        $cpf_cnpj = $cliente['cpf_cnpj'];
+    }
+
     $nome = $_POST['nome'];
     $celular = limparDocumento($_POST['celular'] ?? '');
     $email = $_POST['email'];
@@ -1278,8 +1284,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                                 <input type="number" id="tempo_prof_meses" name="tempo_prof_meses" value="<?= htmlspecialchars($cliente['tempo_prof_meses']) ?>" required>
                                             </div>
                                             <div class="client-info-pair">
-                                                <label for="renda_mensal">Renda Mensal:</label>
-                                                <input type="text" id="renda_mensal" name="renda_mensal" value="<?= htmlspecialchars($cliente['renda_mensal']) ?>" required>
+                                                <label for="cnpj_integrador">Cnpj Integrador:</label>
+                                                <input type="text" id="cnpj_integrador" name="cnpj_integrador" value="<?= htmlspecialchars($cliente['cnpj_integrador']) ?>" required>
                                             </div>
                                             <div class="client-info-pair">
                                                 <label for="integrador">Integrador:</label>
@@ -1310,6 +1316,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                             <div class="client-info-pair">
                                                 <label for="valor_projeto">Valor do Projeto:</label>
                                                 <input type="text" id="valor_projeto" name="valor_projeto" value="<?= htmlspecialchars($cliente['valor_projeto']) ?>" required>
+                                            </div>
+                                            <div class="client-info-pair">
+                                                <label for="renda_mensal">Renda Mensal:</label>
+                                                <input type="text" id="renda_mensal" name="renda_mensal" value="<?= htmlspecialchars($cliente['renda_mensal']) ?>" required>
                                             </div>
                                         </div>
                                     </div>
@@ -1786,11 +1796,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </script>
     <script src="./profissao.js"></script>
 
-    <script>
-        function toggleDarkMode() {
-            document.body.classList.toggle("dark-mode");
-        }
-    </script>
+	<script>
+		function toggleDarkMode() {
+			document.body.classList.toggle("dark-mode");
+
+			// Salva o estado atual no localStorage
+			const isDark = document.body.classList.contains("dark-mode");
+			localStorage.setItem("theme", isDark ? "dark" : "light");
+		}
+
+		// Aplica o tema salvo ao carregar a página
+		window.addEventListener("DOMContentLoaded", function() {
+			const savedTheme = localStorage.getItem("theme");
+			if (savedTheme === "dark") {
+				document.body.classList.add("dark-mode");
+			}
+		});
+
+		// Evento no botão (caso ainda não tenha)
+		document.getElementById("toggle-theme").addEventListener("click", toggleDarkMode);
+	</script>
 
     <script>
         function toggleMenu() {
