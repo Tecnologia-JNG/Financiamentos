@@ -2,9 +2,9 @@
 date_default_timezone_set('America/Sao_Paulo');
 header('Content-Type: text/html; charset=UTF-8');
 
-$servername = 'GRPJNG011204080'; // ou IP do servidor MySQL
+$servername = '127.0.0.1:3312'; // ou IP do servidor MySQL
 $username = 'root';
-$password = 'password';
+$password = '';
 $database = 'FINANCEIRAS';
 
 // Conexão com MySQL
@@ -50,7 +50,7 @@ function formatCpfCnpj($value)
 // Consulta TOP 20
 $sql = "SELECT id, cpf_cnpj, nome, celular, email, rg, dt_nascimento, nacionalidade, genero, estado_civil, valor_patrimonio, nome_mae, cep, endereco, numero, bairro, cidade, estado, tipo_imovel,
     natureza_ocupacao, profissao, tempo_prof_anos, tempo_prof_meses, renda_mensal, integrador, agente, gerente, valor_projeto, parcela, carencia, data_input,
-    banco_bv, banco_santander, simulacao_bv, simulacao_sant, status
+    banco_bv, banco_santander, simulacao_bv, simulacao_sant, banco_solagora, simulacao_solagora status
     FROM clientes 
     $whereClause
     ORDER BY id DESC 
@@ -649,8 +649,6 @@ if (!$result) {
                 font-size: 22px;
             }
         }
-
-        
     </style>
 </head>
 
@@ -720,6 +718,7 @@ if (!$result) {
                             <th>Simulação</th>
                             <th>Banco BV</th>
                             <th>Banco Santander</th>
+                            <th>Banco Solagora</th>
                         </tr>
                         <!-- while para criar tabela com as informações do banco de dados -->
                         <?php while ($row = mysqli_fetch_assoc($result)):
@@ -732,6 +731,8 @@ if (!$result) {
                             $simulacao_bv      = trim($row['simulacao_bv'] ?? '');
                             $simulacao_sant    = trim($row['simulacao_sant'] ?? '');
                             $statusValue       = strtolower(trim($row['status'] ?? ''));
+                            $banco_solagora = trim($rom['banco_solagora'] ?? '');
+                            $simulacao_solagora = trim($rom['simulacao_solagora'] ?? '');
 
                             $dataInput = '';
                             if (!empty($row['data_input'])) {
@@ -746,7 +747,7 @@ if (!$result) {
                         <td>$dataInput</td>
                         <td></td>
                         <td></td>
-                        <td colspan='2' class='aguardando'>⏳ Aguardando Processamento</td>
+                        <td colspan='3' class='aguardando' style='text-align: center;'>⏳ Aguardando Processamento</td>
                         </tr>";
                                 continue;
                             }
@@ -773,6 +774,17 @@ if (!$result) {
                                 $santanderIcon = '⏳ Aguardando';
                             }
 
+                            //  banco Solagora
+                            if (strtoupper($banco_solagora) === 'S' &&  $statusValue === 'processado') {
+                                $solagoraIcon = '✅ Processado';
+                            } elseif (strtoupper($banco_solagora) === 'S' &&  $statusValue === 'integrado') {
+                                $solagoraIcon = '💰 Integrado';
+                            } elseif (strtoupper($banco_solagora) === 'N' &&  $statusValue === 'err cpf/cnpj') {
+                                $solagoraIcon = '❌ ERR CPF/CNPJ';
+                            } else {
+                                $solagoraIcon = '⏳ Aguardando';
+                            }
+
                             // Simulação Banco BV
                             if (!empty($simulacao_bv)) {
                                 $simulacaoBvLabel = htmlspecialchars($simulacao_bv);
@@ -797,6 +809,17 @@ if (!$result) {
                                 $simulacaoSantLabel = '⏳ Aguardando';
                             }
 
+                            // Simulação Banco BV
+                            if (!empty($simulacao_solagora)) {
+                                $simulacaoSolagoraLabel = htmlspecialchars($simulacao_solagora);
+                            } elseif (in_array(strtolower($banco_solagora), ['n', 'nao']) && $statusValue === 'err cpf/cnpj') {
+                                $simulacaoSolagoraLabel = '❌ ERR CPF/CNPJ';
+                            } elseif (in_array(strtolower($banco_solagora), ['s', 'sim'])) {
+                                $simulacaoSolagoraLabel = '⚠️ Sem resultado';
+                            } else {
+                                $simulacaoSolagoraLabel = '⏳ Aguardando';
+                            }
+
                         ?>
                             <tr>
                                 <td><?= formatCpfCnpj($cpf) ?></td>
@@ -807,10 +830,12 @@ if (!$result) {
                                 <td>
                                     <button class="btn-simulacao"
                                         data-Simulacao-Bv="<?= $simulacaoBvLabel ?>"
-                                        data-Simulacao-Santander="<?= $simulacaoSantLabel ?>">Ver</button>
+                                        data-Simulacao-Santander="<?= $simulacaoSantLabel ?>"
+                                        data-Simulacao-Solagora="<?= $simulacaoSolagoraLabel ?>">Ver</button>
                                 </td>
                                 <td><?= $bvIcon ?></td>
                                 <td><?= $santanderIcon ?></td>
+                                <td><?= $solagoraIcon ?></td>
                             </tr>
                         <?php endwhile; ?>
                     </table>
@@ -835,7 +860,8 @@ if (!$result) {
         document.addEventListener("DOMContentLoaded", function() {
             const labels = {
                 simulacaobv: "Simulação BV",
-                simulacaosantander: "Simulação Santander"
+                simulacaosantander: "Simulação Santander",
+                simulacaosolagora: "Simulação Solagora"
             };
 
 
@@ -877,18 +903,22 @@ if (!$result) {
     <script>
         function toggleDarkMode() {
             document.body.classList.toggle("dark-mode");
-        }
-    </script>
 
-    <script>
-        function toggleMenu() {
-            const nav = document.getElementById('navLinks');
-            nav.classList.toggle('show');
+            // Salva o estado atual no localStorage
+            const isDark = document.body.classList.contains("dark-mode");
+            localStorage.setItem("theme", isDark ? "dark" : "light");
         }
 
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-        }
+        // Aplica o tema salvo ao carregar a página
+        window.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-mode");
+            }
+        });
+
+        // Evento no botão (caso ainda não tenha)
+        document.getElementById("toggle-theme").addEventListener("click", toggleDarkMode);
     </script>
 </body>
 
