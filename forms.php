@@ -1,9 +1,5 @@
 <?php
-$servername = '127.0.0.1:3312'; // ou IP do servidor MySQL
-$username = 'root';
-$password = '';
-$database = 'FINANCEIRAS';
-
+include("config.php");
 
 header('Content-Type: text/html; charset=UTF-8');
 
